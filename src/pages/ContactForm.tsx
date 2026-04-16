@@ -209,6 +209,7 @@ export default function ContactForm() {
             data-netlify="true"
             netlify-honeypot="bot-field"
             onSubmit={handleSubmit}
+            netlify-data-netlify-recaptcha="true"
           >
             <input type="hidden" name="form-name" value="enquiry" />
             <div style={{ display: 'none' }}>
