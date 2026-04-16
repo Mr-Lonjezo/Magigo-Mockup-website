@@ -18,6 +18,7 @@ export default function ContactForm() {
 
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (productName) {
@@ -29,35 +30,67 @@ export default function ContactForm() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const encode = (data: Record<string, string>) => {
+    return Object.keys(data)
+      .map(key => encodeURIComponent(key) + "=" + encodeURIComponent(data[key]))
+      .join("&");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
-    const form = e.target as HTMLFormElement;
-    const formDataObj = new FormData(form);
+    setError('');
 
     try {
-      const response = await fetch('/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams(Array.from(formDataObj.entries()) as [string, string][]).toString(),
+      // Create form data for Netlify
+      const formBody = {
+        "form-name": "enquiry",
+        ...formData
+      };
+
+      // Submit to Netlify
+      const response = await fetch("/", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: encode(formBody)
       });
 
       if (response.ok) {
         setSubmitted(true);
         setFormData({
-          name: '', email: '', phone: '', product: '', quantity: '', location: '', message: '', preferredContact: 'email',
+          name: '',
+          email: '',
+          phone: '',
+          product: '',
+          quantity: '',
+          location: '',
+          message: '',
+          preferredContact: 'email',
         });
+      } else {
+        setError('Something went wrong. Please try again or contact us directly by phone.');
       }
-    } catch (error) {
-      console.error('Form submission error:', error);
+    } catch (err) {
+      console.error('Form submission error:', err);
+      setError('Network error. Please check your connection or contact us directly by phone.');
     } finally {
       setLoading(false);
     }
   };
 
   const locations = ['Blantyre', 'Lilongwe', 'Mzuzu', 'Zomba', 'Other'];
-  const products = ['Cement & Lime', 'Steel Reinforcement', 'Nails & Brick Force Wire', 'PVC Pipes & Fittings', 'DPC & DPM Membrane', 'Electrical Wires & Fittings', 'Tile Adhesive & Wall Putty', 'Termite Treatment', 'General Hardware', 'Other'];
+  const products = [
+    'Cement & Lime', 
+    'Steel Reinforcement', 
+    'Nails & Brick Force Wire', 
+    'PVC Pipes & Fittings', 
+    'DPC & DPM Membrane', 
+    'Electrical Wires & Fittings', 
+    'Tile Adhesive & Wall Putty', 
+    'Termite Treatment', 
+    'General Hardware', 
+    'Other'
+  ];
 
   if (submitted) {
     return (
@@ -203,15 +236,31 @@ export default function ContactForm() {
             Fill out the form below and our team will provide you with pricing and availability information.
           </p>
 
+          {error && (
+            <div style={{
+              background: '#FEE2E2',
+              border: '1px solid #EF4444',
+              color: '#991B1B',
+              padding: '12px 16px',
+              borderRadius: '10px',
+              marginBottom: '24px',
+              fontSize: '14px',
+            }}>
+              {error}
+            </div>
+          )}
+
           <form
             name="enquiry"
             method="POST"
             data-netlify="true"
             netlify-honeypot="bot-field"
             onSubmit={handleSubmit}
-            netlify-data-netlify-recaptcha="true"
           >
+            {/* Netlify Form Detection */}
             <input type="hidden" name="form-name" value="enquiry" />
+            
+            {/* Honeypot field for spam protection */}
             <div style={{ display: 'none' }}>
               <input name="bot-field" />
             </div>
